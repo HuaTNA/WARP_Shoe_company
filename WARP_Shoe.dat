@@ -1,0 +1,46 @@
+###################################################
+#### Write your names and student numbers here ####
+#Hua_Tan_tanhua_1008071337
+#Di_Zhu_zhudi17_1007967568
+
+
+###################################################
+## Define your parameters and sets here
+#calling the tables
+
+table table6 IN "ODBC" "./WARP2011W.mdb" "Product_Master":
+	J <-[Product_Num], sales ~ Sales_Price;
+read table table6;
+
+############ Read data from RM_Master table here:
+table table2 IN "ODBC" "./WARP2011W.mdb" "RM_Master":
+	N <-[RM_Num], cost ~ Cost, s_Quantity ~ S_Quantity;
+read table table2;
+############# Read data from BOM table. *Hint: You should use a similar for loop, the one we used above, here.
+table table1 IN "ODBC" "./WARP2011W.mdb" "BOM":
+	[Product_Num, RM_Num], quantity ~ Quantity;
+read table table1;
+
+############ Read Machine_Assign data from table
+table table4 IN "ODBC" "./WARP2011W.mdb" "Machine_Assign":
+	[Product_Num, Machine_Num] , avgDuration ~ Avg_Duration;
+read table table4;
+
+table table5 IN "ODBC" "./WARP2011W.mdb" "Warehouse_Master":
+	W <-[Warehouse_Num], capacity ~ Capacity;
+read table table5;
+
+############# Read data from Product_Demand table here. For example, The following code reads the demand for month 1 of each year.
+table table7 IN "ODBC" "./WARP2011W.mdb" "SQL= SELECT Product_Num,AVG(SumDemand) / 7 AS AvgDemand FROM (SELECT Product_Num,SUM(Demand) AS SumDemand FROM Product_Demand WHERE Month = 2 AND Store_Num BETWEEN 1 AND 10 GROUP BY Product_Num) AS ABCD GROUP BY Product_Num":
+    [Product_Num], demand ~ AvgDemand;
+read table table7;
+
+############ Read data from Machine_Master table here:
+table table8 IN "ODBC" "./WARP2011W.mdb" "Machine_Master":
+	E <-[Machine_Num], opcost ~ OpCost_per_min;
+read table table8;
+############# Read Store_Master data from table
+
+#####################################################
+################ Predict Demand Here ################
+# Hint: Use for loop over Shoes and use let command.

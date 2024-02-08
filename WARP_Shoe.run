@@ -1,0 +1,117 @@
+###################################################
+#### Write your names and student numbers here ####
+#Hua_Tan_tanhua_1008071337
+#Di_Zhu_zhudi17_1007967568
+
+
+###################################################
+#### Read model and data files. Include the address of your .mod and .dat file. Here is an example:
+#model '\\SRVB\Homes$\shourabi\Desktop\MIE262_Project\warp.mod';
+reset;
+model WARP_Shoe.mod;
+data WARP_Shoe.dat;
+var numViolate := 0;
+###################################################
+############## Solve your model here ##############
+# NOTE: DO NOT TOUCH THIS PART.
+option solver gurobi;
+
+solve;
+###################################################
+#### Print the information of the solution heredisplay Profit, x, RM_Num, quantity, s_Quantity, c, r, d, cost > WARP_Shoe.out;
+
+for{j in J} {
+	let x[j] := round(x[j]);
+	}
+printf "The maximum Profit: %0.2f.\n", Profit > WARP_Shoe.out;
+printf"The objective value: \n"> WARP_Shoe.out;
+display x, x.rc > WARP_Shoe.out;
+printf"Slack variable: " > WARP_Shoe.out;
+display material.slack, Capacity.slack, rawMaterial.slack, machineTIme.slack, DEMand.slack > WARP_Shoe.out;
+#print violation inf
+if sum{j in J, n in N} x[j]*quantity[j,n]*cost[n] <= 10000000 then
+	printf " Constraint material is not violated after rounding. \n" > WARP_Shoe.out;
+else{
+	printf " Constraint material is violated after rounding. \n" > WARP_Shoe.out;
+	let numViolate := numViolate + 1;
+	}
+	
+if sum {j in J} x[j] <= sum{w in W}capacity[w] then
+	printf "  Constraint Capacity is not violated after rounding. \n" > WARP_Shoe.out;
+else{
+	printf " Constraint Capacity is violated after rounding. \n" > WARP_Shoe.out;
+	let numViolate := numViolate + 1;
+	}
+	
+for {n in N}{
+	if sum{j in J} x[j]*quantity[j, n] <= s_Quantity[n] then
+		printf " Constraint rawMaterial n%d is not violated after rounding. \n", n > WARP_Shoe.out;
+	else{
+		printf " Constraint rawMaterial n%d is violated after rounding. \n", n > WARP_Shoe.out;
+		let numViolate := numViolate + 1;
+		}
+}
+
+for {e in E}{
+	if sum{j in J} (1/60)*x[j]*avgDuration[j, e] <= 20160 then
+		printf " Constraint machineTIme e%d is not violated after rounding. \n", e > WARP_Shoe.out;
+	else{
+		printf " Constraint machineTIme e%d is violated after rounding. \n", e > WARP_Shoe.out;
+		let numViolate := numViolate + 1;
+		}
+}
+		
+for {j in J}{
+	if  x[j] <= demand[j] then
+		printf " Constraint DEMand [%s] is not violated after rounding. \n", j > WARP_Shoe.out;
+	else{
+		printf " Constraint DEMand [%s] is violated after rounding. \n", j > WARP_Shoe.out;
+		let numViolate := numViolate + 1;
+		}		
+}
+
+#print Binding inf
+if material.slack == 0 then
+	printf "Constraint material is binding.\n" > WARP_Shoe.out;
+ else
+ 	printf "Constraint material is not binding.\n" > WARP_Shoe.out;
+
+
+if Capacity.slack == 0 then
+	printf "Constraint Capacity is binding.\n" > WARP_Shoe.out;
+ else
+ 	printf "Constraint Capacity is not binding.\n" > WARP_Shoe.out;
+
+
+for{n in N}{
+	if rawMaterial.slack[n] == 0 then
+	printf "Constraint rawMaterial n%d is binding.\n", n > WARP_Shoe.out;
+ else
+ 	printf "Constraint rawMaterial n%d is not binding.\n", n > WARP_Shoe.out;
+}
+
+
+for{e in E}{
+	if machineTIme.slack[e] == 0 then
+	printf "Constraint machineTIme e%d is binding.\n", e > WARP_Shoe.out;
+ else
+ 	printf "Constraint machineTIme e%d is not binding.\n", e > WARP_Shoe.out;
+}
+
+for{j in J}{
+	if DEMand.slack[j] == 0 then
+	printf "Constraint DEMand [%s] is binding.\n", j > WARP_Shoe.out;
+ else
+ 	printf "Constraint DEMand [%s] is not binding.\n", j > WARP_Shoe.out;
+}
+printf "The number of constraints were violated after rounding is: %d \n", numViolate > WARP_Shoe.out;
+
+
+
+
+#Print out the violated info to Console
+printf "The number of constraints were violated after rounding is: %d \n", numViolate;
+
+
+
+close WARP_Shoe.out;
